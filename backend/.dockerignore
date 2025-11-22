@@ -1,0 +1,3 @@
+../../test/.gitignore
+!target/
+!target/emma-server

@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: emma-server
+
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/emma_data}
+    username: ${SPRING_DATASOURCE_USERNAME:emma_su}
+    password: ${SPRING_DATASOURCE_PASSWORD:secret_emergency_pwd}
+    driver-class-name: org.postgresql.Driver
+
+  security:
+    user:
+      name: dev
+      password: amazing
+      roles: ADMIN
+
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true

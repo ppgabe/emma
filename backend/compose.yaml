@@ -1,0 +1,22 @@
+services:
+  postgis:
+    image: postgis/postgis:18-3.6-alpine
+    container_name: emma_db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=emma_su
+      - POSTGRES_PASSWORD=secret_emergency_pwd
+      - POSTGRES_DB=emma_data
+    volumes:
+      - postgis_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U emma_su -d emma-data"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgis_data:
