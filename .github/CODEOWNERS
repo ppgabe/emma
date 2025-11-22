@@ -1,0 +1,9 @@
+# The CODEOWNERS file is a way to define ownership of files and directories in the repo.
+# Changing files within the bounds of this CODEOWNERS file will require approval from the listed owner/s.
+
+/.github/CODEOWNERS    @ppgabe
+README.md              @ppgabe
+
+backend/               @ppgabe
+*.java                 @ppgabe
+
