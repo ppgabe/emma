@@ -1,7 +1,8 @@
-FROM debian:bookworm-slim
+FROM eclipse-temurin:21-jre-alpine
 
-RUN apt-get update && apt-get install -y libz1 && rm -rf /var/lib/apt/lists/*
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
 
-COPY target/emma-server /app/emma-server
+COPY target/*.jar app.jar
 
-ENTRYPOINT ["/app/emma-server"]
+ENTRYPOINT ["java", "-jar", "/app.jar"]
