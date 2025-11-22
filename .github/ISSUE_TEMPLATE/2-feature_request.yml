@@ -1,0 +1,25 @@
+name: Feature Request
+description: Request a feature to be potentially added!
+title: "[REQUEST]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a feature!
+  - type: textarea
+    id: what-feature
+    attributes:
+      label: What feature would you like to be added?
+      description: If you can, please include as much details as you can!
+    validations:
+      required: true
+  - type: dropdown
+    id: significance
+    attributes:
+      label: Significance
+      description: How significant is this feature?
+      options:
+        - Critical (core features)
+        - Quality-of-Life (improvements)
+        - Accessibility
