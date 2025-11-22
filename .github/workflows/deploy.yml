@@ -1,4 +1,4 @@
-name: Deploy Backend (Native)
+name: Deploy Backend Docker Image to Docker Hub
 
 on:
   push:
@@ -43,33 +43,3 @@ jobs:
           context: ./backend
           push: true
           tags: ${{ env.IMAGE_NAME }}:latest
-
-      - name: Install and configure the Koyeb CLI
-        uses: koyeb-community/koyeb-actions@v2
-        with:
-          api_token: "${{ secrets.KOYEB_API_TOKEN }}"
-
-      - name: Add Koyeb datasource URL secret
-        uses: koyeb/action-git-deploy/secret@v1
-        with:
-          secret-name: SPRING_DATASOURCE_URL
-          secret-value: "${{ secrets.SPRING_DATASOURCE_URL }}"
-
-      - name: Add Koyeb datasource Username secret
-        uses: koyeb/action-git-deploy/secret@v1
-        with:
-          secret-name: SPRING_DATASOURCE_USERNAME
-          secret-value: "${{ secrets.SPRING_DATASOURCE_USERNAME }}"
-
-      - name: Add Koyeb datasource Password secret
-        uses: koyeb/action-git-deploy/secret@v1
-        with:
-          secret-name: SPRING_DATASOURCE_PASSWORD
-          secret-value: "${{ secrets.SPRING_DATASOURCE_PASSWORD }}"
-          
-      - name: Deploy via Koyeb CLI
-        uses: koyeb/action-git-deploy@v1
-        with:
-          app-name: emma
-          service-name: emma-server
-          docker: ${{ env.IMAGE_NAME }}:latest
