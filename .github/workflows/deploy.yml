@@ -56,7 +56,7 @@ jobs:
           api_token: "${{ secrets.KOYEB_API_TOKEN }}"
 
       - name: Install Koyeb CLI
-        uses: koyeb/action-git-deploy@v2
+        uses: koyeb/action-git-deploy@v1
         with:
           app-name: emma
           service-name: emma-server
