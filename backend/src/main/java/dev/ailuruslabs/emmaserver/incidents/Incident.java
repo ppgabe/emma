@@ -2,6 +2,7 @@ package dev.ailuruslabs.emmaserver.incidents;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.locationtech.jts.geom.Point;
 
 import java.time.ZonedDateTime;
@@ -29,5 +30,16 @@ public class Incident {
     @Column(updatable = false)
     private ZonedDateTime reportedAt;
 
+    @UpdateTimestamp
     private ZonedDateTime updatedAt;
+
+    public Incident(UUID reporterId, Point location, String title, String description, IncidentType type) {
+        this.reporterId = reporterId;
+        this.location = location;
+        this.title = title;
+        this.description = description;
+        this.type = type;
+    }
+
+    public Incident() {}
 }
