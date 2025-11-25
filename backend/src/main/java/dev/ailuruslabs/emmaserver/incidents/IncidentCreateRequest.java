@@ -17,6 +17,7 @@ public record IncidentCreateRequest(
     @Size(min = 6, max = 255, message = "Description must be between 6 and 255 characters")
     String description,
 
+    @NotNull
     IncidentType type
 ) {
 }
