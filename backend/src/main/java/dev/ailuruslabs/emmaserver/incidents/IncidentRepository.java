@@ -30,7 +30,7 @@ interface IncidentRepository extends JpaRepository<Incident, Long> {
                 :#{#bottomRightPoint.lon()},
                 :#{#topLeftPoint.lat()},
                 4326
-            )::geography
+            )
         )
         """, nativeQuery = true)
     List<Incident> findWithinBounds(

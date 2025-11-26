@@ -1,6 +1,8 @@
 package dev.ailuruslabs.emmaserver.incidents;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.Positive;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
@@ -23,17 +25,16 @@ class IncidentController {
     @GetMapping("/nearby")
     List<Incident> getNearbyIncidents(
         @Valid Coordinates coordinates,
-        @RequestParam double radius
+        @RequestParam @Positive @DecimalMax(value = "2,500") double radius
     ) {
         return incidentService.getIncidentsWithinRadius(coordinates, radius);
     }
 
     @GetMapping("/viewport")
     List<Incident> getIncidentsWithinViewport(
-        @Valid Coordinates topLeft,
-        @Valid Coordinates bottomRight
+        @Valid ViewportSearchRequest request
     ) {
-        return incidentService.getIncidentsWithinBounds(topLeft, bottomRight);
+        return incidentService.getIncidentsWithinBounds(request.topLeft(), request.bottomRight());
     }
 
     @PostMapping
