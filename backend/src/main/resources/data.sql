@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_incidents_location ON incidents USING GIST (location);
