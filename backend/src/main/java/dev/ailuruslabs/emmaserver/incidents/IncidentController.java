@@ -5,6 +5,7 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.Positive;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,6 +39,7 @@ class IncidentController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     Incident reportIncident(@Valid @RequestBody IncidentReportRequest incidentReportRequest) {
         return incidentService.saveIncident(incidentReportRequest); // TODO: This should probably also trigger a SSE.
     }
