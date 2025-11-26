@@ -3,6 +3,7 @@ package dev.ailuruslabs.emmaserver.incidents;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -50,10 +51,5 @@ public class IncidentService {
                 incidentCreateRequest.type()
             )
         );
-    }
-
-    @Bean
-    GeometryFactory geometryFactory() {
-        return new GeometryFactory(new PrecisionModel(), 4326);
     }
 }
