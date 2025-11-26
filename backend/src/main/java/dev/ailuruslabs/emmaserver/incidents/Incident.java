@@ -9,6 +9,7 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @Entity
+@Table(name = "incidents")
 public class Incident {
 
     @Id

@@ -6,9 +6,9 @@ import jakarta.validation.constraints.DecimalMin;
 public record Coordinates(
     @DecimalMin(value = "-90", message = "Latitude cannot be less than -90")
     @DecimalMax(value = "90", message = "Latitude cannot be greater than 90")
-    double latitude,
+    double lat,
 
     @DecimalMin(value = "-180", message = "Latitude cannot be less than -180")
     @DecimalMax(value = "180", message = "Latitude cannot be greater than 180")
-    double longitude
+    double lon
 ) {}

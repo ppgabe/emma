@@ -27,6 +27,21 @@ public class IncidentService {
         return incidentRepository.findAll(pageable);
     }
 
+    public List<Incident> getIncidentsWithinRadius(Coordinates userCoordinates, double radius) {
+        var userLocation = geometryFactory.createPoint(
+            new Coordinate(
+                userCoordinates.lon(),
+                userCoordinates.lat()
+            )
+        );
+
+        return incidentRepository.findWithinRadius(userLocation, radius);
+    }
+
+    public List<Incident> getIncidentsWithinBounds(Coordinates topLeft, Coordinates bottomRight) {
+        return incidentRepository.findWithinBounds(topLeft, bottomRight);
+    }
+
     public Incident saveIncident(IncidentReportRequest incidentReportRequest) {
         var userPrincipal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -41,8 +56,8 @@ public class IncidentService {
 
         var incidentPoint = geometryFactory.createPoint(
             new Coordinate(
-                incidentReportRequest.coordinates().longitude(),
-                incidentReportRequest.coordinates().latitude()
+                incidentReportRequest.coordinates().lon(),
+                incidentReportRequest.coordinates().lat()
             )
         );
 

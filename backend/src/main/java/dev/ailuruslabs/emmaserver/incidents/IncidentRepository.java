@@ -11,9 +11,30 @@ import java.util.List;
 @Repository
 interface IncidentRepository extends JpaRepository<Incident, Long> {
 
-    @Query("SELECT i FROM Incident i WHERE ST_DWithin(i.location, :userLocation, :radiusInMeters) = true")
-    List<Incident> findNearbyWithinRadius(
+    @Query(value = """
+        SELECT * FROM incidents
+        WHERE ST_DWithin(location, :userLocation, :radiusInMeters)
+        """, nativeQuery = true)
+    List<Incident> findWithinRadius(
         @Param("userLocation") Point userLocation,
         @Param("radiusInMeters") double radiusInMeters
+    );
+
+    @Query(value = """
+        SELECT * FROM incidents
+        WHERE ST_Intersects(
+            location,
+            ST_MakeEnvelope(
+                :#{#topLeftPoint.lon()},
+                :#{#bottomRightPoint.lat()},
+                :#{#bottomRightPoint.lon()},
+                :#{#topLeftPoint.lat()},
+                4326
+            )::geography
+        )
+        """, nativeQuery = true)
+    List<Incident> findWithinBounds(
+        @Param("topLeftPoint") Coordinates topLeftPoint,
+        @Param("bottomRightPoint") Coordinates bottomRightPoint
     );
 }

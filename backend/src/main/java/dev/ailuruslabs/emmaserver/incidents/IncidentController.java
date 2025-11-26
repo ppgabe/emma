@@ -20,6 +20,22 @@ class IncidentController {
         return incidentService.getIncidents(pageable);
     }
 
+    @GetMapping("/nearby")
+    List<Incident> getNearbyIncidents(
+        @Valid Coordinates coordinates,
+        @RequestParam double radius
+    ) {
+        return incidentService.getIncidentsWithinRadius(coordinates, radius);
+    }
+
+    @GetMapping("/viewport")
+    List<Incident> getIncidentsWithinViewport(
+        @Valid Coordinates topLeft,
+        @Valid Coordinates bottomRight
+    ) {
+        return incidentService.getIncidentsWithinBounds(topLeft, bottomRight);
+    }
+
     @PostMapping
     Incident reportIncident(@Valid @RequestBody IncidentReportRequest incidentReportRequest) {
         return incidentService.saveIncident(incidentReportRequest); // TODO: This should probably also trigger a SSE.
