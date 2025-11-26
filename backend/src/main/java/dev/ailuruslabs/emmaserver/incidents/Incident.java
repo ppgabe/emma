@@ -43,4 +43,36 @@ public class Incident {
     }
 
     public Incident() {}
+
+    public Long getId() {
+        return id;
+    }
+
+    public UUID getReporterId() {
+        return reporterId;
+    }
+
+    public Point getLocation() {
+        return location;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public IncidentType getType() {
+        return type;
+    }
+
+    public ZonedDateTime getReportedAt() {
+        return reportedAt;
+    }
+
+    public ZonedDateTime getUpdatedAt() {
+        return updatedAt;
+    }
 }

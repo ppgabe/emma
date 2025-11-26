@@ -1,6 +1,6 @@
 package dev.ailuruslabs.emmaserver.incidents;
 
-enum IncidentType {
+public enum IncidentType {
     EARTHQUAKE,
     LANDSLIDE,
     FIRE,
