@@ -27,3 +27,7 @@ spring:
         format_sql: true
         show_sql: true
     defer-datasource-initialization: true
+
+emma:
+  cors:
+    allowed-origins: "*" # Must be overridden in prod.
