@@ -9,6 +9,6 @@ public record GeoJsonPointSchema(
     @Schema(description = "Type of geometry", example = "Point")
     String type,
 
-    @Schema(description = "Coordinates [lon, lat]", example = "[14.599, 120.984]")
+    @Schema(description = "Coordinates [lon, lat]", example = "[120.984, 14.599]")
     List<Double> coordinates
 ) {}
