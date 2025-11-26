@@ -2,11 +2,14 @@ package dev.ailuruslabs.emmaserver.incidents;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -18,6 +21,10 @@ public class IncidentService {
     IncidentService(IncidentRepository incidentRepository, GeometryFactory geometryFactory) {
         this.incidentRepository = incidentRepository;
         this.geometryFactory = geometryFactory;
+    }
+
+    public Page<Incident> getIncidents(Pageable pageable) {
+        return incidentRepository.findAll(pageable);
     }
 
     public Incident saveIncident(IncidentReportRequest incidentReportRequest) {
