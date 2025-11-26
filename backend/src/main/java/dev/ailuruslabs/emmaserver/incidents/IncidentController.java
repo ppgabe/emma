@@ -26,7 +26,7 @@ class IncidentController {
     @GetMapping("/nearby")
     List<Incident> getNearbyIncidents(
         @Valid Coordinates coordinates,
-        @RequestParam @Positive @DecimalMax(value = "2,500") double radius
+        @RequestParam @Positive @DecimalMax(value = "10000") double radius
     ) {
         return incidentService.getIncidentsWithinRadius(coordinates, radius);
     }
