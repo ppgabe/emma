@@ -2,7 +2,6 @@ package dev.ailuruslabs.emmaserver.incidents;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import org.springframework.lang.NonNull;
 
 public record Coordinates(
     @DecimalMin(value = "-90", message = "Latitude cannot be less than -90")

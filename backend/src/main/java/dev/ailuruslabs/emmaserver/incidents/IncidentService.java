@@ -1,6 +1,5 @@
 package dev.ailuruslabs.emmaserver.incidents;
 
-import jakarta.validation.Valid;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
