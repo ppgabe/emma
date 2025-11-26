@@ -1,5 +1,6 @@
 package dev.ailuruslabs.emmaserver.incidents;
 
+import dev.ailuruslabs.emmaserver.events.ServerSentEventsService;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.springframework.data.domain.Page;
@@ -17,10 +18,12 @@ public class IncidentService {
 
     private final IncidentRepository incidentRepository;
     private final GeometryFactory geometryFactory;
+    private final ServerSentEventsService serverSentEventsService;
 
-    IncidentService(IncidentRepository incidentRepository, GeometryFactory geometryFactory) {
+    IncidentService(IncidentRepository incidentRepository, GeometryFactory geometryFactory, ServerSentEventsService serverSentEventsService) {
         this.incidentRepository = incidentRepository;
         this.geometryFactory = geometryFactory;
+        this.serverSentEventsService = serverSentEventsService;
     }
 
     public Page<Incident> getIncidents(Pageable pageable) {
@@ -61,7 +64,7 @@ public class IncidentService {
             )
         );
 
-        return incidentRepository.save(
+        var savedIncident = incidentRepository.save(
             new Incident(
                 userUUID,
                 incidentPoint,
@@ -70,5 +73,9 @@ public class IncidentService {
                 incidentReportRequest.type()
             )
         );
+
+        serverSentEventsService.broadcastIncident(savedIncident);
+
+        return savedIncident;
     }
 }
