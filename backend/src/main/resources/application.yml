@@ -28,6 +28,9 @@ spring:
         show_sql: true
     defer-datasource-initialization: true
 
+server:
+  forward-headers-strategy: framework
+
 emma:
   cors:
     allowed-origins: "*" # Must be overridden in prod.
