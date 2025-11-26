@@ -13,11 +13,12 @@ spring:
     driver-class-name: org.postgresql.Driver
 
   security:
-    user:
-      name: dev
-      password: amazing
-      roles: ADMIN
-
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:https://hewmyprmvhjfpfyjdmpd.supabase.co/auth/v1}
+          jwk-set-uri: ${JWK_SET_URI:https://hewmyprmvhjfpfyjdmpd.supabase.co/auth/v1/.well-known/jwks.json}
+          jws-algorithms: ES256
   jpa:
     hibernate:
       ddl-auto: update
