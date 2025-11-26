@@ -2,9 +2,6 @@ package dev.ailuruslabs.emmaserver.incidents;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.PrecisionModel;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtException;
@@ -23,7 +20,7 @@ public class IncidentService {
         this.geometryFactory = geometryFactory;
     }
 
-    public Incident saveIncident(IncidentCreateRequest incidentCreateRequest) {
+    public Incident saveIncident(IncidentReportRequest incidentReportRequest) {
         var userPrincipal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         UUID userUUID;
@@ -37,8 +34,8 @@ public class IncidentService {
 
         var incidentPoint = geometryFactory.createPoint(
             new Coordinate(
-                incidentCreateRequest.coordinates().longitude(),
-                incidentCreateRequest.coordinates().latitude()
+                incidentReportRequest.coordinates().longitude(),
+                incidentReportRequest.coordinates().latitude()
             )
         );
 
@@ -46,9 +43,9 @@ public class IncidentService {
             new Incident(
                 userUUID,
                 incidentPoint,
-                incidentCreateRequest.title(),
-                incidentCreateRequest.description(),
-                incidentCreateRequest.type()
+                incidentReportRequest.title(),
+                incidentReportRequest.description(),
+                incidentReportRequest.type()
             )
         );
     }
