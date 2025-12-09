@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:emma_mobile/login_form.dart';
-import 'package:emma_mobile/register_form.dart';
+import 'package:emma_mobile/routes/login_form.dart';
+import 'package:emma_mobile/routes/register_form.dart';
 
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});

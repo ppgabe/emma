@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:emma_mobile/emma_secure_storage.dart';
+import 'package:emma_mobile/routes/emma_secure_storage.dart';
 import 'package:emma_mobile/env/env.dart';
-import 'package:emma_mobile/landing_screen.dart';
-import 'package:emma_mobile/map_screen.dart';
-import 'package:emma_mobile/splash_screen.dart';
+import 'package:emma_mobile/routes/landing_screen.dart';
+import 'package:emma_mobile/routes/map_screen.dart';
+import 'package:emma_mobile/routes/splash_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

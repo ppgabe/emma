@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:emma_mobile/map_screen.dart';
+import 'package:emma_mobile/routes/map_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginForm extends StatefulWidget {

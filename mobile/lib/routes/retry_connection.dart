@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:emma_mobile/splash_screen.dart';
+import 'package:emma_mobile/routes/splash_screen.dart';
 
 class RetryConnection extends StatelessWidget {
   const RetryConnection({super.key});
