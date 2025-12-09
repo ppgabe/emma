@@ -34,7 +34,6 @@ class _EmmaAppState extends State<EmmaApp> {
   void initState() {
     super.initState();
 
-
     supabase.auth.onAuthStateChange.listen((data) {
       final AuthChangeEvent event = data.event;
       debugPrint("Auth Event: $event");

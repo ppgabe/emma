@@ -8,9 +8,7 @@ part of 'geo_json_point.dart';
 
 GeoJsonPoint _$GeoJsonPointFromJson(Map<String, dynamic> json) => GeoJsonPoint(
   type: json['type'] as String,
-  coordinates: Coordinates.fromJson(
-    json['coordinates'] as Map<String, dynamic>,
-  ),
+  coordinates: GeoJsonPoint._coordinatesFromJson(json['coordinates'] as List),
 );
 
 Map<String, dynamic> _$GeoJsonPointToJson(GeoJsonPoint instance) =>

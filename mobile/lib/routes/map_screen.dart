@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:emma_mobile/env/env.dart';
+import 'package:emma_mobile/models/coordinates.dart';
+import 'package:emma_mobile/services/incident_service.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import '../models/incident.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -13,6 +18,50 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
+
+  final IncidentService _incidentService = IncidentService();
+  List<Incident> _nearbyIncidents = [];
+  Set<Marker> _markers = {};
+
+  late GoogleMapController _mapController;
+
+  Timer? _debounce;
+
+  void getViewportIncidents() async {
+    final bounds = await _mapController.getVisibleRegion();
+
+    final topLeftPoint = Coordinates(
+      lon: bounds.southwest.longitude,
+      lat: bounds.northeast.latitude,
+    );
+    final bottomRightPoint = Coordinates(
+      lon: bounds.northeast.longitude,
+      lat: bounds.southwest.latitude,
+    );
+
+    final incidents = await _incidentService.fetchViewportIncidents(
+      topLeftPoint,
+      bottomRightPoint,
+    );
+
+    Set<Marker> newMarkers = {};
+    for (var incident in incidents) {
+      final coordinates = incident.location.coordinates;
+
+      newMarkers.add(
+        Marker(
+          markerId: MarkerId(incident.id.toString()),
+          position: LatLng(coordinates.lat, coordinates.lon),
+        ),
+      );
+    }
+
+    if (mounted) {
+      setState(() {
+        _markers = newMarkers;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,9 +93,22 @@ class _MapScreenState extends State<MapScreen> {
                   padding: EdgeInsets.only(
                     top: 32,
                     left: 16,
-                    bottom: sheetSizeInPixels - 48,
+                    bottom: sheetSizeInPixels - 16,
                   ),
                   zoomControlsEnabled: false,
+                  markers: _markers,
+                  onCameraIdle: () {
+                    _debounce?.cancel();
+                    _debounce = Timer(
+                      Duration(milliseconds: 500),
+                      () => getViewportIncidents(),
+                    );
+                  },
+                  onMapCreated: (controller) {
+                    setState(() {
+                      _mapController = controller;
+                    });
+                  },
                 ),
               ),
 
@@ -88,18 +150,23 @@ class _MapScreenState extends State<MapScreen> {
 
                   Expanded(
                     child: ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 4,
+                      ),
                       controller: scrollController,
                       children: [
                         Row(
-                         children: [
-                           Text(
-                             "Nearby incidents",
-                             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                           ),
-
-                         ],
-                        )
+                          children: [
+                            Text(
+                              "Nearby incidents",
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
