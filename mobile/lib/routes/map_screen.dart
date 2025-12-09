@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:emma_mobile/env/env.dart';
 import 'package:emma_mobile/models/coordinates.dart';
+import 'package:emma_mobile/models/incident_type.dart';
 import 'package:emma_mobile/services/incident_service.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../models/incident.dart';
@@ -97,6 +97,7 @@ class _MapScreenState extends State<MapScreen> {
                     bottom: sheetSizeInPixels - 16,
                   ),
                   zoomControlsEnabled: false,
+                  mapToolbarEnabled: false,
                   markers: _markers,
                   onCameraIdle: () {
                     _debounce?.cancel();
@@ -113,72 +114,139 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               ),
 
-              PositionedDirectional(
-                end: 16,
-                bottom: sheetSizeInPixels + 8,
-                child: FloatingActionButton(
-                  onPressed: () {},
-                  child: Icon(Icons.add_alert),
-                ),
-              ),
+              ReportIncidentButton(sheetSizeInPixels: sheetSizeInPixels),
 
               child!,
             ],
           );
         },
 
-        child: DraggableScrollableSheet(
-          controller: _sheetController,
-          initialChildSize: 0.12,
-          minChildSize: 0.12,
-          maxChildSize: 0.9,
-          snap: true,
-          snapSizes: [0.12, 0.6, 0.9],
-          builder: (context, scrollController) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).canvasColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.elliptical(24, 32),
-                  topRight: Radius.elliptical(24, 32),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 4,
+        child: NearbyIncidents(sheetController: _sheetController, nearbyIncidents: _nearbyIncidents),
+      ),
+    );
+  }
+}
+
+class ReportIncidentButton extends StatelessWidget {
+  const ReportIncidentButton({
+    super.key,
+    required this.sheetSizeInPixels,
+  });
+
+  final double sheetSizeInPixels;
+
+  @override
+  Widget build(BuildContext context) {
+    return PositionedDirectional(
+      end: 16,
+      bottom: sheetSizeInPixels + 8,
+      child: FloatingActionButton(
+        onPressed: () {},
+        child: Icon(Icons.add_alert),
+      ),
+    );
+  }
+}
+
+class NearbyIncidents extends StatelessWidget {
+  const NearbyIncidents({
+    super.key,
+    required DraggableScrollableController sheetController,
+    required List<Incident> nearbyIncidents,
+  }) : _sheetController = sheetController, _nearbyIncidents = nearbyIncidents;
+
+  final DraggableScrollableController _sheetController;
+  final List<Incident> _nearbyIncidents;
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      controller: _sheetController,
+      initialChildSize: 0.12,
+      minChildSize: 0.12,
+      maxChildSize: 0.9,
+      snap: true,
+      snapSizes: [0.12, 0.6, 0.9],
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).canvasColor,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.elliptical(24, 32),
+              topRight: Radius.elliptical(24, 32),
+            ),
+          ),
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 4,
+                  ),
+                  controller: scrollController,
+                  children: [
+                    const Center(
+                      child: Divider(
+                        endIndent: 144,
+                        indent: 144,
+                        thickness: 4,
                       ),
-                      controller: scrollController,
+                    ),
+
+                    Row(
                       children: [
-                        const Center(
-                          child: Divider(
-                            endIndent: 144,
-                            indent: 144,
-                            thickness: 4,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              "Nearby incidents",
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
+                        NearbyIncidentsHeader(),
                       ],
                     ),
-                  ),
-                ],
+
+                    for (final incident in _nearbyIncidents)
+                      IncidentListTile(incident: incident),
+                  ],
+                ),
               ),
-            );
-          },
-        ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class NearbyIncidentsHeader extends StatelessWidget {
+  const NearbyIncidentsHeader({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      "Nearby incidents",
+      style: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+}
+
+class IncidentListTile extends StatelessWidget {
+  const IncidentListTile({
+    super.key,
+    required this.incident,
+  });
+
+  final Incident incident;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(incident.title),
+      subtitle: Text(incident.description),
+      leading: incident.type.icon,
+      trailing: Text(
+        '${incident.reportedAt.hour}:'
+        '${incident.reportedAt.minute.toString().padLeft(2, '0')}',
       ),
     );
   }
