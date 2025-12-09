@@ -4,6 +4,7 @@ import 'package:emma_mobile/env/env.dart';
 import 'package:emma_mobile/models/coordinates.dart';
 import 'package:emma_mobile/services/incident_service.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../models/incident.dart';
@@ -144,10 +145,6 @@ class _MapScreenState extends State<MapScreen> {
               ),
               child: Column(
                 children: [
-                  const Center(
-                    child: Divider(endIndent: 144, indent: 144, thickness: 4),
-                  ),
-
                   Expanded(
                     child: ListView(
                       padding: const EdgeInsets.symmetric(
@@ -156,6 +153,13 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                       controller: scrollController,
                       children: [
+                        const Center(
+                          child: Divider(
+                            endIndent: 144,
+                            indent: 144,
+                            thickness: 4,
+                          ),
+                        ),
                         Row(
                           children: [
                             Text(
