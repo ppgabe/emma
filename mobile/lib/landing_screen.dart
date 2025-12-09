@@ -34,56 +34,61 @@ class _LandingScreenState extends State<LandingScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: AlignmentGeometry.center,
-      children: [
-        AnimatedBuilder(
-          animation: _colorBreathingAnimationController,
-          builder: (context, child) {
-            return Container(
-              color: Color.lerp(
-                Colors.deepPurple,
-                Colors.redAccent,
-                _colorBreathingAnimationController.value,
-              ),
-            );
-          },
-        ),
-
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.elliptical(32, 24),
-                topRight: Radius.elliptical(32, 24),
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                FilledButton(
-                  onPressed: () {
-                    _showLoginForm(context);
-                  },
-                  child: const Text("Login"),
+    return Scaffold(
+      body: Stack(
+        alignment: AlignmentGeometry.center,
+        children: [
+          AnimatedBuilder(
+            animation: _colorBreathingAnimationController,
+            builder: (context, child) {
+              return Container(
+                color: Color.lerp(
+                  Colors.deepPurple,
+                  Colors.redAccent,
+                  _colorBreathingAnimationController.value,
                 ),
-
-                OutlinedButton(
-                  onPressed: () {
-                    _showRegisterForm(context);
-                  },
-                  child: const Text("Register"),
+              );
+            },
+          ),
+      
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.elliptical(32, 24),
+                  topRight: Radius.elliptical(32, 24),
                 ),
-              ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FilledButton(
+                      onPressed: () {
+                        _showLoginForm(context);
+                      },
+                      child: const Text("Login"),
+                    ),
+                      
+                    OutlinedButton(
+                      onPressed: () {
+                        _showRegisterForm(context);
+                      },
+                      child: const Text("Register"),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

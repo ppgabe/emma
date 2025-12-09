@@ -12,4 +12,7 @@ abstract class Env {
 
   @EnviedField(varName: 'SUPABASE_PROJECT_URL', obfuscate: true)
   static final String supabaseProjectUrl = _Env.supabaseProjectUrl;
+
+  @EnviedField(varName: 'CLOUD_MAP_ID', obfuscate: true)
+  static final String cloudMapId = _Env.cloudMapId;
 }

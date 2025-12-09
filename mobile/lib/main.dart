@@ -4,6 +4,7 @@ import 'package:emma_mobile/env/env.dart';
 import 'package:emma_mobile/landing_screen.dart';
 import 'package:emma_mobile/map_screen.dart';
 import 'package:emma_mobile/splash_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
@@ -32,6 +33,7 @@ class _EmmaAppState extends State<EmmaApp> {
   @override
   void initState() {
     super.initState();
+
 
     supabase.auth.onAuthStateChange.listen((data) {
       final AuthChangeEvent event = data.event;
@@ -63,7 +65,11 @@ class _EmmaAppState extends State<EmmaApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'EMMA',
-      theme: ThemeData.dark(),
+      theme: ThemeData.dark().copyWith(
+        textTheme: GoogleFonts.outfitTextTheme(
+          ThemeData.dark().textTheme
+        )
+      ),
       home: const SplashScreen(),
       navigatorKey: _navigatorKey,
       debugShowCheckedModeBanner: false,
