@@ -17,7 +17,7 @@ class IncidentService {
     return http.get(uri, headers: headers);
   }
 
-  Future<http.Response> fetchNearbyIncidents(
+  Future<List<Incident>> fetchNearbyIncidents(
     double lat,
     double lon,
     double radius,
@@ -28,7 +28,21 @@ class IncidentService {
       "${Env.apiUrl}/incidents/nearby?lat=$lat&lon=$lon&radius=$radius",
     );
 
-    return _getHttpRequest(uri, {'Authorization': "Bearer $token"});
+    var nearbyIncidents = await _getHttpRequest(uri, {'Authorization': "Bearer $token"});
+
+    if (nearbyIncidents.statusCode == HttpStatus.ok) {
+      debugPrint("Nearby incidents request OK!");
+
+      return (jsonDecode(nearbyIncidents.body) as List<dynamic>)
+          .map((e) => Incident.fromJson(e))
+          .toList(growable: false);
+    } else if (nearbyIncidents.statusCode == HttpStatus.unauthorized) {
+      throw HttpException('Please log in again.');
+    } else if (nearbyIncidents.statusCode == HttpStatus.internalServerError) {
+      throw HttpException('Please try again.');
+    } else {
+      throw HttpException('Something went wrong.');
+    }
   }
 
   Future<List<Incident>> fetchViewportIncidents(
@@ -54,8 +68,12 @@ class IncidentService {
       return (jsonDecode(viewportIncidents.body) as List<dynamic>)
           .map((e) => Incident.fromJson(e))
           .toList(growable: false);
+    } else if (viewportIncidents.statusCode == HttpStatus.unauthorized) {
+      throw HttpException('Please log in again.');
+    } else if (viewportIncidents.statusCode == HttpStatus.internalServerError) {
+      throw HttpException('Please try again.');
     } else {
-      throw HttpException('Failed to load incidents: ${viewportIncidents.statusCode}');
+      throw HttpException('Something went wrong.');
     }
   }
 }

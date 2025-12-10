@@ -1,0 +1,4 @@
+enum MapSheetContent {
+  nearbyList,
+  reportForm
+}
