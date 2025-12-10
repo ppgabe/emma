@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:toastification/toastification.dart';
 
 import '../models/incident.dart';
@@ -39,8 +40,9 @@ class _MapScreenState extends State<MapScreen> {
   Timer? _nearbyIncidentsRefresh;
   bool _isLoadingNearby = true;
 
-  TextEditingController _titleTextController = TextEditingController();
-  TextEditingController _descriptionTextController = TextEditingController();
+  final TextEditingController _titleTextController = TextEditingController();
+  final TextEditingController _descriptionTextController =
+      TextEditingController();
   IncidentType _incidentType = IncidentType.EARTHQUAKE;
 
   late Position _userLocation;
@@ -197,38 +199,7 @@ class _MapScreenState extends State<MapScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          SafeArea(
-            top: false,
-            child: GoogleMap(
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(14.599, 120.984), // Manila
-                zoom: 14,
-              ),
-              cloudMapId: Env.cloudMapId,
-              myLocationEnabled: true,
-              myLocationButtonEnabled: true,
-              padding: EdgeInsets.only(
-                top: 32,
-                left: 16,
-                bottom: (MediaQuery.of(context).size.height * 0.15) - 8,
-              ),
-              zoomControlsEnabled: false,
-              mapToolbarEnabled: false,
-              markers: _markers,
-              onCameraIdle: () {
-                _viewportDebounce?.cancel();
-                _viewportDebounce = Timer(
-                  Duration(milliseconds: 500),
-                  () => _getViewportIncidents(),
-                );
-              },
-              onMapCreated: (controller) {
-                setState(() {
-                  _mapController = controller;
-                });
-              },
-            ),
-          ),
+          buildGoogleMap(context),
 
           AnimatedBuilder(
             animation: _sheetController,
@@ -243,36 +214,180 @@ class _MapScreenState extends State<MapScreen> {
                   : MediaQuery.of(context).size.height * 0.15;
 
               return Stack(
-                children: [buildReportButton(sheetSizeInPixels), child!],
+                children: [
+                  if (_mapSheetContent == MapSheetContent.nearbyList)
+                    buildReportButton(sheetSizeInPixels),
+
+                  child!,
+                ],
               );
             },
 
-            child: DraggableScrollableSheet(
-              controller: _sheetController,
-              initialChildSize: 0.12,
-              minChildSize: 0.12,
-              maxChildSize: 0.9,
-              snap: true,
-              snapSizes: [0.12, 0.6, 0.9],
-              builder: (context, scrollController) {
-                return switch (_mapSheetContent) {
-                  MapSheetContent.nearbyList => NearbyIncidents(
-                    isLoadingNearby: _isLoadingNearby,
-                    nearbyIncidents: _nearbyIncidents,
-                    scrollController: scrollController,
-                  ),
-                  MapSheetContent.reportForm => ReportForm(
-                    titleTextController: _titleTextController,
-                    descriptionTextController: _descriptionTextController,
-                    scrollController: scrollController,
-                  ),
-                };
-              },
-            ),
+            child: buildMapSheet(),
           ),
         ],
       ),
     );
+  }
+
+  SafeArea buildGoogleMap(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: GoogleMap(
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(14.599, 120.984), // Manila
+          zoom: 14,
+        ),
+        cloudMapId: Env.cloudMapId,
+        myLocationEnabled: true,
+        myLocationButtonEnabled: true,
+        padding: EdgeInsets.only(
+          top: 32,
+          left: 16,
+          bottom: (MediaQuery.of(context).size.height * 0.15) - 32,
+        ),
+        zoomControlsEnabled: false,
+        mapToolbarEnabled: false,
+        markers: _markers,
+        onCameraIdle: () {
+          _viewportDebounce?.cancel();
+          _viewportDebounce = Timer(
+            Duration(milliseconds: 500),
+            () => _getViewportIncidents(),
+          );
+        },
+        onMapCreated: (controller) {
+          setState(() {
+            _mapController = controller;
+          });
+        },
+      ),
+    );
+  }
+
+  DraggableScrollableSheet buildMapSheet() {
+    return DraggableScrollableSheet(
+      controller: _sheetController,
+      initialChildSize: 0.12,
+      minChildSize: 0.12,
+      maxChildSize: _mapSheetContent == MapSheetContent.reportForm ? 0.6 : 0.9,
+      snap: true,
+      snapSizes: [
+        0.12,
+        0.6,
+        ?_mapSheetContent == MapSheetContent.reportForm ? null : 0.9,
+      ],
+      builder: (context, scrollController) {
+        final sheet = switch (_mapSheetContent) {
+          MapSheetContent.nearbyList => buildNearbyIncidents(),
+          MapSheetContent.reportForm => buildReportForm(),
+        };
+
+        return Container(
+          clipBehavior: Clip.hardEdge,
+          decoration: BoxDecoration(
+            color: Theme.of(context).canvasColor,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.elliptical(24, 32),
+              topRight: Radius.elliptical(24, 32),
+            ),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+          child: MediaQuery.removePadding(
+            removeTop: true,
+            context: context,
+            child: CustomScrollView(
+              controller: scrollController,
+              slivers: sheet,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  List<Widget> buildReportForm() {
+    return <Widget>[
+      SliverAppBar(
+        backgroundColor: Theme.of(context).canvasColor,
+        pinned: true,
+        titleSpacing: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [const ScrollDivider(), const ReportFormHeader()],
+        ),
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton.outlined(
+            onPressed: () {
+              setState(() {
+                _nearbyIncidentsRefresh = Timer.periodic(
+                  Duration(seconds: 30),
+                  (_) {
+                    setState(() {
+                      _isLoadingNearby = true;
+
+                      _fetchNearbyIncidents();
+                    });
+                  },
+                );
+
+                _sheetController.animateTo(
+                  0.15,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutExpo,
+                );
+                _mapSheetContent = MapSheetContent.nearbyList;
+              });
+            },
+            icon: const Icon(Icons.arrow_back),
+          ),
+        ],
+        actionsPadding: EdgeInsets.only(top: 12),
+      ),
+
+      SliverToBoxAdapter(
+        child: Column(
+          children: [
+            TextField(
+              controller: _titleTextController,
+              decoration: const InputDecoration(labelText: 'Title'),
+              maxLength: 64,
+              maxLengthEnforcement: MaxLengthEnforcement.enforced,
+            ),
+
+            TextField(
+              controller: _descriptionTextController,
+              decoration: const InputDecoration(labelText: 'Description'),
+              maxLength: 255,
+              maxLengthEnforcement: MaxLengthEnforcement.enforced,
+            ),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> buildNearbyIncidents() {
+    return <Widget>[
+      SliverAppBar(
+        backgroundColor: Theme.of(context).canvasColor,
+        pinned: true,
+        titleSpacing: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [const ScrollDivider(), const NearbyIncidentsHeader()],
+        ),
+        automaticallyImplyLeading: false,
+      ),
+
+      SuperSliverList.builder(
+        itemCount: _nearbyIncidents.length,
+        itemBuilder: (context, index) {
+          return IncidentListTile(incident: _nearbyIncidents[index]);
+        },
+      ),
+    ];
   }
 
   PositionedDirectional buildReportButton(double sheetSizeInPixels) {
@@ -282,6 +397,8 @@ class _MapScreenState extends State<MapScreen> {
       child: FloatingActionButton(
         onPressed: () {
           setState(() {
+            _nearbyIncidentsRefresh?.cancel();
+
             _mapSheetContent = MapSheetContent.reportForm;
             _sheetController.animateTo(
               0.6,
@@ -296,55 +413,13 @@ class _MapScreenState extends State<MapScreen> {
   }
 }
 
-class ReportForm extends StatelessWidget {
-  const ReportForm({
-    super.key,
-    required TextEditingController titleTextController,
-    required TextEditingController descriptionTextController,
-    required ScrollController scrollController,
-  }) : _titleTextController = titleTextController,
-       _scrollController = scrollController,
-       _descriptionTextController = descriptionTextController;
-
-  final TextEditingController _titleTextController;
-  final TextEditingController _descriptionTextController;
-  final ScrollController _scrollController;
+class ScrollDivider extends StatelessWidget {
+  const ScrollDivider({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).canvasColor,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.elliptical(24, 32),
-          topRight: Radius.elliptical(24, 32),
-        ),
-      ),
-      child: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-        controller: _scrollController,
-        children: [
-          const Center(
-            child: Divider(endIndent: 144, indent: 144, thickness: 4),
-          ),
-
-          Row(children: [ReportIncidentHeader()]),
-
-          TextField(
-            controller: _titleTextController,
-            decoration: const InputDecoration(labelText: 'Title'),
-            maxLength: 64,
-            maxLengthEnforcement: MaxLengthEnforcement.enforced,
-          ),
-
-          TextField(
-            controller: _descriptionTextController,
-            decoration: const InputDecoration(labelText: 'Description'),
-            maxLength: 255,
-            maxLengthEnforcement: MaxLengthEnforcement.enforced,
-          ),
-        ],
-      ),
+    return const Center(
+      child: Divider(endIndent: 144, indent: 144, thickness: 4),
     );
   }
 }
@@ -360,66 +435,8 @@ class ReportIncidentButton extends StatelessWidget {
       end: 16,
       bottom: sheetSizeInPixels + 8,
       child: FloatingActionButton(
-        onPressed: () {
-          setState() {}
-        },
+        onPressed: () {},
         child: Icon(Icons.add_alert),
-      ),
-    );
-  }
-}
-
-class NearbyIncidents extends StatelessWidget {
-  const NearbyIncidents({
-    super.key,
-    required bool isLoadingNearby,
-    required List<Incident> nearbyIncidents,
-    required ScrollController scrollController,
-  }) : _isLoadingNearby = isLoadingNearby,
-       _nearbyIncidents = nearbyIncidents,
-       _scrollController = scrollController;
-
-  final bool _isLoadingNearby;
-  final List<Incident> _nearbyIncidents;
-  final ScrollController _scrollController;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).canvasColor,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.elliptical(24, 32),
-          topRight: Radius.elliptical(24, 32),
-        ),
-      ),
-      child: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-              controller: _scrollController,
-              children: [
-                const Center(
-                  child: Divider(endIndent: 144, indent: 144, thickness: 4),
-                ),
-
-                Row(children: [NearbyIncidentsHeader()]),
-
-                if (_isLoadingNearby)
-                  Center(
-                    child: SizedBox.square(
-                      dimension: 32,
-                      child: CircularProgressIndicator.adaptive(),
-                    ),
-                  )
-                else
-                  for (final incident in _nearbyIncidents)
-                    IncidentListTile(incident: incident),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -437,8 +454,8 @@ class NearbyIncidentsHeader extends StatelessWidget {
   }
 }
 
-class ReportIncidentHeader extends StatelessWidget {
-  const ReportIncidentHeader({super.key});
+class ReportFormHeader extends StatelessWidget {
+  const ReportFormHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
