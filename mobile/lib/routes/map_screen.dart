@@ -381,12 +381,24 @@ class _MapScreenState extends State<MapScreen> {
         automaticallyImplyLeading: false,
       ),
 
-      SuperSliverList.builder(
-        itemCount: _nearbyIncidents.length,
-        itemBuilder: (context, index) {
-          return IncidentListTile(incident: _nearbyIncidents[index]);
-        },
-      ),
+      if (_isLoadingNearby)
+        SliverToBoxAdapter(
+          child: SizedBox.square(
+            dimension: 32,
+            child: CircularProgressIndicator.adaptive(),
+          ),
+        )
+      else if (_nearbyIncidents.isEmpty)
+        SliverToBoxAdapter(
+          child: Text("No incidents near you right now!"),
+        )
+      else
+        SuperSliverList.builder(
+          itemCount: _nearbyIncidents.length,
+          itemBuilder: (context, index) {
+            return IncidentListTile(incident: _nearbyIncidents[index]);
+          },
+        ),
     ];
   }
 
