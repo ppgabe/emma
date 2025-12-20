@@ -308,13 +308,14 @@ class _MapScreenState extends State<MapScreen> {
 
   List<Widget> buildReportForm() {
     return <Widget>[
+      SliverToBoxAdapter(child: Center(child: const ScrollDivider())),
       SliverAppBar(
         backgroundColor: Theme.of(context).canvasColor,
         pinned: true,
         titleSpacing: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [const ScrollDivider(), const ReportFormHeader()],
+          children: [const ReportFormHeader()],
         ),
         automaticallyImplyLeading: false,
         actions: [
@@ -370,28 +371,32 @@ class _MapScreenState extends State<MapScreen> {
 
   List<Widget> buildNearbyIncidents() {
     return <Widget>[
+      SliverToBoxAdapter(child: Center(child: const ScrollDivider())),
       SliverAppBar(
         backgroundColor: Theme.of(context).canvasColor,
         pinned: true,
         titleSpacing: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [const ScrollDivider(), const NearbyIncidentsHeader()],
+          children: [const NearbyIncidentsHeader()],
         ),
         automaticallyImplyLeading: false,
       ),
 
       if (_isLoadingNearby)
         SliverToBoxAdapter(
-          child: SizedBox.square(
-            dimension: 32,
-            child: CircularProgressIndicator.adaptive(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+            child: Center(
+              child: SizedBox.square(
+                dimension: 32,
+                child: CircularProgressIndicator.adaptive(),
+              ),
+            ),
           ),
         )
       else if (_nearbyIncidents.isEmpty)
-        SliverToBoxAdapter(
-          child: Text("No incidents near you right now!"),
-        )
+        SliverToBoxAdapter(child: Text("No incidents near you right now!"))
       else
         SuperSliverList.builder(
           itemCount: _nearbyIncidents.length,
