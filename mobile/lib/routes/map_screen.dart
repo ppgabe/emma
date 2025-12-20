@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:emma_mobile/env/env.dart';
 import 'package:emma_mobile/models/coordinates.dart';
+import 'package:emma_mobile/models/incident_report_request.dart';
 import 'package:emma_mobile/models/incident_type.dart';
 import 'package:emma_mobile/routes/map_sheet_content.dart';
 import 'package:emma_mobile/services/incident_service.dart';
@@ -40,6 +41,7 @@ class _MapScreenState extends State<MapScreen> {
   Timer? _viewportDebounce;
   Timer? _nearbyIncidentsRefresh;
   bool _isLoadingNearby = true;
+  bool _isSubmittingReport = false;
 
   final TextEditingController _titleTextController = TextEditingController();
   final TextEditingController _descriptionTextController =
@@ -178,6 +180,91 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
+  void _submitIncidentReport() async {
+    setState(() {
+      _isSubmittingReport = true;
+    });
+
+    final reportRequest = IncidentReportRequest(
+      coordinates: Coordinates(
+        lon: _userLocation.longitude,
+        lat: _userLocation.latitude,
+      ),
+      title: _titleTextController.text,
+      description: _descriptionTextController.text,
+      type: _incidentType,
+    );
+
+    try {
+      final Incident created = await _incidentService.submitIncidentRequest(
+        reportRequest,
+      );
+
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.success,
+          style: ToastificationStyle.flatColored,
+          title: const Text("Incident reported!"),
+          autoCloseDuration: const Duration(seconds: 3),
+        );
+      }
+    } on HttpException catch (e) {
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          style: ToastificationStyle.flatColored,
+          title: const Text("Could submit incident."),
+          description: Text(e.message),
+          alignment: Alignment.topCenter,
+          autoCloseDuration: const Duration(seconds: 5),
+          borderRadius: BorderRadius.circular(10.0),
+          boxShadow: lowModeShadow,
+          closeButton: ToastCloseButton(showType: CloseButtonShowType.always),
+        );
+
+        setState(() {
+          _isSubmittingReport = false;
+        });
+
+        return;
+      }
+      return;
+    } on Exception catch (_) {
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          style: ToastificationStyle.flatColored,
+          title: const Text("Could submit incident due to app error."),
+          description: Text("This is on us, sorry! Please try again."),
+          alignment: Alignment.topCenter,
+          autoCloseDuration: const Duration(seconds: 5),
+          borderRadius: BorderRadius.circular(10.0),
+          boxShadow: lowModeShadow,
+          closeButton: ToastCloseButton(showType: CloseButtonShowType.always),
+        );
+
+        setState(() {
+          _isSubmittingReport = false;
+        });
+
+        return;
+      }
+      return;
+    }
+
+    debugPrint("Successful incident request!");
+
+    setState(() {
+      _titleTextController.clear();
+      _descriptionTextController.clear();
+      _mapSheetContent = MapSheetContent.nearbyList;
+      _isSubmittingReport = false;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -200,7 +287,7 @@ class _MapScreenState extends State<MapScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          buildGoogleMap(context),
+          _buildGoogleMap(context),
 
           AnimatedBuilder(
             animation: _sheetController,
@@ -217,21 +304,21 @@ class _MapScreenState extends State<MapScreen> {
               return Stack(
                 children: [
                   if (_mapSheetContent == MapSheetContent.nearbyList)
-                    buildReportButton(sheetSizeInPixels),
+                    _buildReportButton(sheetSizeInPixels),
 
                   child!,
                 ],
               );
             },
 
-            child: buildMapSheet(),
+            child: _buildMapSheet(),
           ),
         ],
       ),
     );
   }
 
-  SafeArea buildGoogleMap(BuildContext context) {
+  SafeArea _buildGoogleMap(BuildContext context) {
     return SafeArea(
       top: false,
       child: GoogleMap(
@@ -266,7 +353,7 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  DraggableScrollableSheet buildMapSheet() {
+  DraggableScrollableSheet _buildMapSheet() {
     return DraggableScrollableSheet(
       controller: _sheetController,
       initialChildSize: 0.12,
@@ -280,8 +367,8 @@ class _MapScreenState extends State<MapScreen> {
       ],
       builder: (context, scrollController) {
         final sheet = switch (_mapSheetContent) {
-          MapSheetContent.nearbyList => buildNearbyIncidents(),
-          MapSheetContent.reportForm => buildReportForm(),
+          MapSheetContent.nearbyList => _buildNearbyIncidents(),
+          MapSheetContent.reportForm => _buildReportForm(),
         };
 
         return Container(
@@ -307,7 +394,7 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  List<Widget> buildReportForm() {
+  List<Widget> _buildReportForm() {
     return <Widget>[
       SliverToBoxAdapter(child: Center(child: const ScrollDivider())),
       SliverAppBar(
@@ -348,48 +435,92 @@ class _MapScreenState extends State<MapScreen> {
         actionsPadding: EdgeInsets.only(top: 12),
       ),
 
-      SliverToBoxAdapter(
-        child: Column(
-          children: [
-            const Divider(),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: buildIncidentSelection(),
-            ),
-            const Divider(),
+      if (!_isSubmittingReport)
+        SliverToBoxAdapter(
+          child: Column(
+            children: [
+              const Divider(),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: _buildIncidentSelection(),
+              ),
+              const Divider(),
 
-            TextField(
-              controller: _titleTextController,
-              decoration: const InputDecoration(labelText: 'Title'),
-              maxLength: 64,
-              maxLengthEnforcement: MaxLengthEnforcement.enforced,
-            ),
+              TextField(
+                controller: _titleTextController,
+                decoration: const InputDecoration(labelText: 'Title'),
+                buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
+                  return Text(
+                    "$currentLength of 6-$maxLength characters",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: currentLength >= 6 && currentLength <= 255 ? Colors.green : Colors.redAccent
+                    )
+                  );
+                },
+                maxLength: 64,
+                maxLengthEnforcement: MaxLengthEnforcement.enforced,
+              ),
 
-            TextField(
-              controller: _descriptionTextController,
-              decoration: const InputDecoration(labelText: 'Description'),
-              maxLength: 255,
-              maxLengthEnforcement: MaxLengthEnforcement.enforced,
-              maxLines: 3,
-            ),
+              TextField(
+                controller: _descriptionTextController,
+                decoration: const InputDecoration(labelText: 'Description'),
+                buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
+                  return Text(
+                      "$currentLength of 6-$maxLength characters",
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: currentLength >= 6 && currentLength <= 255 ? Colors.green : Colors.redAccent
+                      )
+                  );
+                },
+                maxLength: 255,
+                maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                maxLines: 3,
+              ),
 
-            FilledButton.icon(
-              onPressed: () {}, // TODO: Add submit logic
-              label: const Text("Submit Incident"),
-              icon: Icon(Icons.send),
-            ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: FilledButton.icon(
+                  onPressed: () {
+                    if (_titleTextController.text.length > 64 ||
+                        _titleTextController.text.length < 6) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(SnackBar(content: Text("Title must be between 6-64 characters.")));
+                      }
+                      return;
+                    }
 
-            Text(
-              'Submitting incident at coordinates:\n${_userLocation.latitude}, ${_userLocation.longitude}',
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+                    if (_descriptionTextController.text.length > 255 ||
+                        _descriptionTextController.text.length < 6) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(SnackBar(content: Text("Description must be between 6-255 characters.")));
+                      }
+                      return;
+                    }
+
+                    _submitIncidentReport();
+                  },
+                  label: const Text("Submit Incident"),
+                  icon: Icon(Icons.send),
+                ),
+              ),
+
+              Text(
+                'Submitting incident at coordinates:\n${_userLocation.latitude}, ${_userLocation.longitude}',
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        )
+      else
+        SliverToBoxAdapter(child: _buildLoadingIndicator()),
     ];
   }
 
-  List<Widget> buildNearbyIncidents() {
+  List<Widget> _buildNearbyIncidents() {
     return <Widget>[
       SliverToBoxAdapter(child: Center(child: const ScrollDivider())),
       SliverAppBar(
@@ -404,17 +535,7 @@ class _MapScreenState extends State<MapScreen> {
       ),
 
       if (_isLoadingNearby)
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
-            child: Center(
-              child: SizedBox.square(
-                dimension: 32,
-                child: CircularProgressIndicator.adaptive(),
-              ),
-            ),
-          ),
-        )
+        SliverToBoxAdapter(child: _buildLoadingIndicator())
       else if (_nearbyIncidents.isEmpty)
         SliverToBoxAdapter(child: Text("No incidents near you right now!"))
       else
@@ -427,7 +548,19 @@ class _MapScreenState extends State<MapScreen> {
     ];
   }
 
-  PositionedDirectional buildReportButton(double sheetSizeInPixels) {
+  Padding _buildLoadingIndicator() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+      child: Center(
+        child: SizedBox.square(
+          dimension: 32,
+          child: CircularProgressIndicator.adaptive(),
+        ),
+      ),
+    );
+  }
+
+  PositionedDirectional _buildReportButton(double sheetSizeInPixels) {
     return PositionedDirectional(
       end: 16,
       bottom: sheetSizeInPixels + 8,
@@ -449,7 +582,7 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  CarouselSlider buildIncidentSelection() {
+  CarouselSlider _buildIncidentSelection() {
     return CarouselSlider(
       options: CarouselOptions(
         viewportFraction: 0.3,
