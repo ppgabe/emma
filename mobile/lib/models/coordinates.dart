@@ -10,4 +10,6 @@ class Coordinates {
   Coordinates({required this.lon, required this.lat});
 
   factory Coordinates.fromJson(Map<String, dynamic> json) => _$CoordinatesFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CoordinatesToJson(this);
 }
