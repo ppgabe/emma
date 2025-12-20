@@ -13,6 +13,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:toastification/toastification.dart';
+import 'package:carousel_slider_plus/carousel_slider_plus.dart';
 
 import '../models/incident.dart';
 
@@ -350,6 +351,13 @@ class _MapScreenState extends State<MapScreen> {
       SliverToBoxAdapter(
         child: Column(
           children: [
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: buildIncidentSelection(),
+            ),
+            const Divider(),
+
             TextField(
               controller: _titleTextController,
               decoration: const InputDecoration(labelText: 'Title'),
@@ -362,6 +370,18 @@ class _MapScreenState extends State<MapScreen> {
               decoration: const InputDecoration(labelText: 'Description'),
               maxLength: 255,
               maxLengthEnforcement: MaxLengthEnforcement.enforced,
+              maxLines: 3,
+            ),
+
+            FilledButton.icon(
+              onPressed: () {}, // TODO: Add submit logic
+              label: const Text("Submit Incident"),
+              icon: Icon(Icons.send),
+            ),
+
+            Text(
+              'Submitting incident at coordinates:\n${_userLocation.latitude}, ${_userLocation.longitude}',
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -426,6 +446,41 @@ class _MapScreenState extends State<MapScreen> {
         },
         child: Icon(Icons.add_alert),
       ),
+    );
+  }
+
+  CarouselSlider buildIncidentSelection() {
+    return CarouselSlider(
+      options: CarouselOptions(
+        viewportFraction: 0.3,
+        onPageChanged: (index, reason) {
+          setState(() {
+            _incidentType = IncidentType.values[index];
+          });
+        },
+        aspectRatio: 16 / 3,
+        enlargeCenterPage: true,
+        enlargeFactor: 0.45,
+      ),
+      items: IncidentType.values.map((i) {
+        return Builder(
+          builder: (BuildContext context) {
+            return FittedBox(
+              fit: BoxFit.scaleDown,
+              clipBehavior: Clip.hardEdge,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(i.icon.icon, color: i.icon.color, size: 36),
+                    Text(i.formattedName),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      }).toList(),
     );
   }
 }
