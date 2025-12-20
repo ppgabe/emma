@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:emma_mobile/env/env.dart';
 import 'package:emma_mobile/models/coordinates.dart';
 import 'package:emma_mobile/models/incident.dart';
+import 'package:emma_mobile/models/incident_report_request.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -28,7 +29,9 @@ class IncidentService {
       "${Env.apiUrl}/incidents/nearby?lat=$lat&lon=$lon&radius=$radius",
     );
 
-    var nearbyIncidents = await _getHttpRequest(uri, {'Authorization': "Bearer $token"});
+    var nearbyIncidents = await _getHttpRequest(uri, {
+      'Authorization': "Bearer $token",
+    });
 
     if (nearbyIncidents.statusCode == HttpStatus.ok) {
       debugPrint("Nearby incidents request OK!");
@@ -61,7 +64,6 @@ class IncidentService {
       'Authorization': "Bearer $token",
     });
 
-
     if (viewportIncidents.statusCode == HttpStatus.ok) {
       debugPrint("Viewport request OK!");
 
@@ -74,6 +76,34 @@ class IncidentService {
       throw HttpException('Please try again.');
     } else {
       throw HttpException('Something went wrong.');
+    }
+  }
+
+  Future<Incident> submitIncidentRequest(IncidentReportRequest request) async {
+    final token = _getSupabaseSession()?.accessToken;
+
+    final uri = Uri.parse("${Env.apiUrl}/incidents");
+    final requestJson = request.toJson();
+
+    var createdIncident = await http.post(
+      uri,
+      headers: {
+        'Authorization': "Bearer $token",
+        'Content-Type': "application/json",
+      },
+      body: jsonEncode(requestJson),
+    );
+
+    if (createdIncident.statusCode == HttpStatus.created) {
+      debugPrint("Submit request OK!");
+
+      return Incident.fromJson(jsonDecode(createdIncident.body));
+    } else if (createdIncident.statusCode == HttpStatus.unauthorized) {
+      throw HttpException('Please log in again.');
+    } else if (createdIncident.statusCode == HttpStatus.internalServerError) {
+      throw HttpException('Please try again.');
+    } else {
+      throw HttpException('${createdIncident.statusCode}: ${createdIncident.body}');
     }
   }
 }
