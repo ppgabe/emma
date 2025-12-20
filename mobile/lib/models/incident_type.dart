@@ -39,4 +39,14 @@ extension IncidentTypeExtension on IncidentType {
       color: Colors.grey,
     ),
   };
+
+  String get formattedName => switch (this) {
+    IncidentType.EARTHQUAKE => "Earthquake",
+    IncidentType.FIRE => "Fire",
+    IncidentType.FLOOD => "Flood",
+    IncidentType.LANDSLIDE => "Landslide",
+    IncidentType.POWER_OUTAGE => "Power Outage",
+    IncidentType.ROAD_BLOCK => "Road Block",
+    IncidentType.ROAD_CRASH => "Road Crash",
+  };
 }
