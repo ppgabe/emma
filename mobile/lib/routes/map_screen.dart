@@ -287,7 +287,7 @@ class _MapScreenState extends State<MapScreen> {
           userPosition.latitude,
           userPosition.longitude,
           incidentPosition.lat,
-          incidentPosition.lat,
+          incidentPosition.lon,
         );
         var userId = Supabase.instance.client.auth.currentSession?.user.id;
         debugPrint("${newIncident.reporterId} == $userId");
