@@ -65,23 +65,29 @@ class _AuthPageState extends State<AuthPage> {
               final email = resetEmailController.text.trim();
               if (email.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Please enter your email address.")),
+                  const SnackBar(
+                    content: Text("Please enter your email address."),
+                  ),
                 );
                 return;
               }
               try {
-                await Supabase.instance.client.auth.resetPasswordForEmail(email);
+                await Supabase.instance.client.auth.resetPasswordForEmail(
+                  email,
+                );
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Reset link sent! Check your email.")),
+                    const SnackBar(
+                      content: Text("Reset link sent! Check your email."),
+                    ),
                   );
                 }
               } on AuthException catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(e.message)),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(e.message)));
                 }
               }
             },
@@ -108,7 +114,11 @@ class _AuthPageState extends State<AuthPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Center(
-                    child: const Image(image: AssetImage('assets/images/emma_logo.png'), height: 128, width: 128,)
+                    child: const Image(
+                      image: AssetImage('assets/images/emma_logo.png'),
+                      height: 128,
+                      width: 128,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -194,82 +204,118 @@ class _AuthPageState extends State<AuthPage> {
 
                   const SizedBox(height: 32),
                   ElevatedButton(
-                    onPressed: _isLoading ? null : () async {
-                      final email = _emailController.text.trim();
-                      final password = _passwordController.text.trim();
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            final email = _emailController.text.trim();
+                            final password = _passwordController.text.trim();
 
-                      if (email.isEmpty || password.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Please fill in all fields.")),
-                        );
-                        return;
-                      }
-
-                      setState(() => _isLoading = true);
-
-                      try {
-                        if (isLogin) {
-                          // Sign in
-                          final response = await _supabase.auth.signInWithPassword(
-                            email: email,
-                            password: password,
-                          );
-
-                          if (mounted && response.user != null) {
-                            final username = response.user!.userMetadata?['username'];
-                            if (username == null || username.toString().isEmpty) {
-                              // User has no username, send to setup profile
-                              Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(builder: (context) => const SetupProfilePage()),
-                                (route) => false,
+                            if (email.isEmpty || password.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Please fill in all fields."),
+                                ),
                               );
-                            } else {
-                              // User has username, send to map
-                              Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(builder: (context) => const MapScreen()),
-                                (route) => false,
-                              );
+                              return;
                             }
-                          }
-                        } else {
-                          // Sign up
-                          final response = await _supabase.auth.signUp(
-                            email: email,
-                            password: password,
-                          );
 
-                          if (mounted && response.user != null) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const SetupProfilePage()),
-                            );
-                          }
-                        }
-                      } on AuthException catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(e.message)),
-                          );
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("An unexpected error occurred.")),
-                          );
-                        }
-                      } finally {
-                        if (mounted) {
-                          setState(() => _isLoading = false);
-                        }
-                      }
-                    },
+                            setState(() => _isLoading = true);
+
+                            try {
+                              if (isLogin) {
+                                // Sign in
+                                final response = await _supabase.auth
+                                    .signInWithPassword(
+                                      email: email,
+                                      password: password,
+                                    );
+
+                                if (mounted && response.user != null) {
+                                  final username =
+                                      response.user!.userMetadata?['username'];
+                                  if (username == null ||
+                                      username.toString().isEmpty) {
+                                    // User has no username, send to setup profile
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const SetupProfilePage(),
+                                      ),
+                                      (route) => false,
+                                    );
+                                  } else {
+                                    // User has username, send to map
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const MapScreen(),
+                                      ),
+                                      (route) => false,
+                                    );
+                                  }
+                                }
+                              } else {
+                                // Sign up
+                                final response = await _supabase.auth.signUp(
+                                  email: email,
+                                  password: password,
+                                );
+
+                                if (mounted && response.user != null) {
+                                  if (response.session != null) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const SetupProfilePage(),
+                                      ),
+                                    );
+                                  }
+
+                                  setState(() {
+                                    isLogin = true;
+                                  });
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Please check your email for the confirmation link.",
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            } on AuthException catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(e.message)),
+                                );
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "An unexpected error occurred.",
+                                    ),
+                                  ),
+                                );
+                              }
+                            } finally {
+                              if (mounted) {
+                                setState(() => _isLoading = false);
+                              }
+                            }
+                          },
                     child: _isLoading
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : Text(isLogin ? 'Sign In' : 'Continue'),
                   ),
