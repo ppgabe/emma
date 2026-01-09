@@ -173,7 +173,7 @@ class _MapScreenState extends State<MapScreen> {
           position: LatLng(coordinates.lat, coordinates.lon),
           infoWindow: InfoWindow(
             title: '${incident.title} (${_dateFormatter.format(incident.reportedAt)})',
-            snippet: incident.description
+            snippet: '[${incident.type.formattedName}] - ${incident.description}'
           )
         ),
       );
