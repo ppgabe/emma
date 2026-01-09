@@ -1,8 +1,8 @@
+import 'package:emma_mobile/routes/auth_page.dart';
 import 'package:emma_mobile/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:emma_mobile/routes/emma_secure_storage.dart';
 import 'package:emma_mobile/env/env.dart';
-import 'package:emma_mobile/routes/landing_screen.dart';
 import 'package:emma_mobile/routes/map_screen.dart';
 import 'package:emma_mobile/routes/setup_profile_page.dart';
 import 'package:emma_mobile/routes/splash_screen.dart';
@@ -50,7 +50,7 @@ class _EmmaAppState extends State<EmmaApp> {
             destination = const MapScreen();
           }
         } else {
-          destination = const LandingScreen();
+          destination = const AuthPage();
         }
 
         _navigatorKey.currentState?.pushAndRemoveUntil(
@@ -61,7 +61,7 @@ class _EmmaAppState extends State<EmmaApp> {
         return;
       } else if (event == AuthChangeEvent.signedOut) {
         _navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const LandingScreen()),
+          MaterialPageRoute(builder: (context) => const AuthPage()),
           (route) => false,
         );
 
