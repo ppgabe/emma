@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:emma_mobile/routes/login_form.dart';
-import 'package:emma_mobile/routes/register_form.dart';
+import 'package:emma_mobile/routes/auth_page.dart';
 
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
@@ -71,14 +70,14 @@ class _LandingScreenState extends State<LandingScreen>
                   children: [
                     FilledButton(
                       onPressed: () {
-                        _showLoginForm(context);
+                        _showAuthPage(context);
                       },
                       child: const Text("Login"),
                     ),
                       
                     OutlinedButton(
                       onPressed: () {
-                        _showRegisterForm(context);
+                        _showAuthPage(context);
                       },
                       child: const Text("Register"),
                     ),
@@ -92,15 +91,9 @@ class _LandingScreenState extends State<LandingScreen>
     );
   }
 
-  void _showLoginForm(BuildContext context) {
+  void _showAuthPage(BuildContext context) {
     Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (context) => const LoginForm()));
-  }
-
-  void _showRegisterForm(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (context) => const RegisterForm()));
+    ).push(MaterialPageRoute(builder: (context) => const AuthPage()));
   }
 }

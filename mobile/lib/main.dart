@@ -1,8 +1,10 @@
+import 'package:emma_mobile/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:emma_mobile/routes/emma_secure_storage.dart';
 import 'package:emma_mobile/env/env.dart';
 import 'package:emma_mobile/routes/landing_screen.dart';
 import 'package:emma_mobile/routes/map_screen.dart';
+import 'package:emma_mobile/routes/setup_profile_page.dart';
 import 'package:emma_mobile/routes/splash_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -39,12 +41,20 @@ class _EmmaAppState extends State<EmmaApp> {
       debugPrint("Auth Event: $event");
 
       if (event == AuthChangeEvent.initialSession) {
+        Widget destination;
+        if (data.session != null) {
+          final username = data.session!.user.userMetadata?['username'];
+          if (username == null || username.toString().isEmpty) {
+            destination = const SetupProfilePage();
+          } else {
+            destination = const MapScreen();
+          }
+        } else {
+          destination = const LandingScreen();
+        }
+
         _navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => data.session != null
-                ? const MapScreen()
-                : const LandingScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => destination),
           (route) => false,
         );
 
@@ -64,9 +74,9 @@ class _EmmaAppState extends State<EmmaApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'EMMA',
-      theme: ThemeData.dark().copyWith(
+      theme: AppTheme.lightTheme.copyWith(
         textTheme: GoogleFonts.outfitTextTheme(
-          ThemeData.dark().textTheme
+          ThemeData.light().textTheme
         )
       ),
       home: const SplashScreen(),
