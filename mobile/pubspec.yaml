@@ -47,6 +47,7 @@ dependencies:
   carousel_slider_plus: ^7.1.1
   lucide_icons_flutter: ^3.1.9
   intl: ^0.20.2
+  flutter_client_sse: ^2.0.3
 
 dev_dependencies:
   flutter_test:

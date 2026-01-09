@@ -13,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:toastification/toastification.dart';
 import 'package:carousel_slider_plus/carousel_slider_plus.dart';
@@ -31,6 +32,7 @@ class _MapScreenState extends State<MapScreen> {
   final LocationService _locationService = LocationService();
 
   final IncidentService _incidentService = IncidentService();
+  late final StreamSubscription<Incident> _incidentStream;
   List<Incident> _nearbyIncidents = [];
   Set<Marker> _markers = {};
 
@@ -97,7 +99,7 @@ class _MapScreenState extends State<MapScreen> {
       _nearbyIncidents = await _incidentService.fetchNearbyIncidents(
         _userLocation.latitude,
         _userLocation.longitude,
-        100000,
+        10_000,
       );
     } on HttpException catch (e) {
       if (mounted) {
@@ -172,9 +174,11 @@ class _MapScreenState extends State<MapScreen> {
           markerId: MarkerId(incident.id.toString()),
           position: LatLng(coordinates.lat, coordinates.lon),
           infoWindow: InfoWindow(
-            title: '${incident.title} (${_dateFormatter.format(incident.reportedAt)})',
-            snippet: '[${incident.type.formattedName}] - ${incident.description}'
-          )
+            title:
+                '${incident.title} (${_dateFormatter.format(incident.reportedAt)})',
+            snippet:
+                '[${incident.type.formattedName}] - ${incident.description}',
+          ),
         ),
       );
     }
@@ -275,10 +279,56 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
 
-    _nearbyIncidentsRefresh = Timer.periodic(Duration(seconds: 30), (_) {
-      setState(() {
-        _isLoadingNearby = true;
+    _incidentStream = _incidentService.subscribeToIncidentUpdates().listen(
+      (newIncident) async {
+        var userPosition = await _locationService.getCurrentPosition();
+        var incidentPosition = newIncident.location.coordinates;
+        var distance = Geolocator.distanceBetween(
+          userPosition.latitude,
+          userPosition.longitude,
+          incidentPosition.lat,
+          incidentPosition.lat,
+        );
+        var userId = Supabase.instance.client.auth.currentSession?.user.id;
+        debugPrint("${newIncident.reporterId} == $userId");
 
+        setState(() {
+          _fetchNearbyIncidents();
+        });
+
+
+        if (!(distance <= 10_000)) { return; }
+        if (newIncident.reporterId == userId) {
+          return;
+        }
+
+        if (mounted) {
+
+          toastification.show(
+            context: context,
+            type: ToastificationType.warning,
+            style: ToastificationStyle.flatColored,
+            title: Text(
+              "New incident reported at ${_dateFormatter.format(newIncident.reportedAt)}",
+            ),
+            description: Text(
+              '[${newIncident.type.formattedName}] - ${newIncident.title}',
+            ),
+            alignment: Alignment.topCenter,
+            autoCloseDuration: const Duration(seconds: 10),
+            borderRadius: BorderRadius.circular(10.0),
+            boxShadow: lowModeShadow,
+            closeButton: ToastCloseButton(showType: CloseButtonShowType.always),
+          );
+        }
+      },
+      onError: (error) {
+        debugPrint("SSE Error: $error");
+      },
+    );
+
+    _nearbyIncidentsRefresh = Timer.periodic(Duration(seconds: 15), (_) {
+      setState(() {
         _fetchNearbyIncidents();
       });
     });
@@ -286,6 +336,14 @@ class _MapScreenState extends State<MapScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchNearbyIncidents();
     });
+  }
+
+  @override
+  void dispose() {
+    _incidentStream.cancel();
+    _incidentService.unsubscribeFromIncidents();
+
+    super.dispose();
   }
 
   @override
@@ -455,15 +513,23 @@ class _MapScreenState extends State<MapScreen> {
               TextField(
                 controller: _titleTextController,
                 decoration: const InputDecoration(labelText: 'Title'),
-                buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
-                  return Text(
-                    "$currentLength of 6-$maxLength characters",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: currentLength >= 6 && currentLength <= 255 ? Colors.green : Colors.redAccent
-                    )
-                  );
-                },
+                buildCounter:
+                    (
+                      context, {
+                      required currentLength,
+                      required isFocused,
+                      maxLength,
+                    }) {
+                      return Text(
+                        "$currentLength of 6-$maxLength characters",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: currentLength >= 6 && currentLength <= 255
+                              ? Colors.green
+                              : Colors.redAccent,
+                        ),
+                      );
+                    },
                 maxLength: 64,
                 maxLengthEnforcement: MaxLengthEnforcement.enforced,
               ),
@@ -471,15 +537,23 @@ class _MapScreenState extends State<MapScreen> {
               TextField(
                 controller: _descriptionTextController,
                 decoration: const InputDecoration(labelText: 'Description'),
-                buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
-                  return Text(
-                      "$currentLength of 6-$maxLength characters",
-                      style: TextStyle(
+                buildCounter:
+                    (
+                      context, {
+                      required currentLength,
+                      required isFocused,
+                      maxLength,
+                    }) {
+                      return Text(
+                        "$currentLength of 6-$maxLength characters",
+                        style: TextStyle(
                           fontSize: 12,
-                          color: currentLength >= 6 && currentLength <= 255 ? Colors.green : Colors.redAccent
-                      )
-                  );
-                },
+                          color: currentLength >= 6 && currentLength <= 255
+                              ? Colors.green
+                              : Colors.redAccent,
+                        ),
+                      );
+                    },
                 maxLength: 255,
                 maxLengthEnforcement: MaxLengthEnforcement.enforced,
                 maxLines: 3,
@@ -492,8 +566,13 @@ class _MapScreenState extends State<MapScreen> {
                     if (_titleTextController.text.length > 64 ||
                         _titleTextController.text.length < 6) {
                       if (mounted) {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(SnackBar(content: Text("Title must be between 6-64 characters.")));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              "Title must be between 6-64 characters.",
+                            ),
+                          ),
+                        );
                       }
                       return;
                     }
@@ -501,8 +580,13 @@ class _MapScreenState extends State<MapScreen> {
                     if (_descriptionTextController.text.length > 255 ||
                         _descriptionTextController.text.length < 6) {
                       if (mounted) {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(SnackBar(content: Text("Description must be between 6-255 characters.")));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              "Description must be between 6-255 characters.",
+                            ),
+                          ),
+                        );
                       }
                       return;
                     }

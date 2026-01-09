@@ -6,6 +6,8 @@ import 'package:emma_mobile/models/coordinates.dart';
 import 'package:emma_mobile/models/incident.dart';
 import 'package:emma_mobile/models/incident_report_request.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_client_sse/constants/sse_request_type_enum.dart';
+import 'package:flutter_client_sse/flutter_client_sse.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -103,7 +105,42 @@ class IncidentService {
     } else if (createdIncident.statusCode == HttpStatus.internalServerError) {
       throw HttpException('Please try again.');
     } else {
-      throw HttpException('${createdIncident.statusCode}: ${createdIncident.body}');
+      throw HttpException(
+        '${createdIncident.statusCode}: ${createdIncident.body}',
+      );
     }
+  }
+
+  Stream<Incident> subscribeToIncidentUpdates() {
+    final token = _getSupabaseSession()?.accessToken;
+    final url = '${Env.apiUrl}/events/stream';
+
+    return SSEClient.subscribeToSSE(
+          method: SSERequestType.GET,
+          url: url,
+          header: {
+            'Authorization': "Bearer $token",
+            'Accept': 'text/event-stream',
+          },
+        )
+        .map((sseModel) {
+          if (sseModel.event == 'incident-report' && sseModel.data != null) {
+            try {
+              final jsonData = jsonDecode(sseModel.data!);
+              return Incident.fromJson(jsonData);
+            } catch (e) {
+              debugPrint("Error parsing incident from stream: $e");
+              return null;
+            }
+          }
+
+          return null;
+        })
+        .where((incident) => incident != null)
+        .cast<Incident>();
+  }
+
+  void unsubscribeFromIncidents() {
+    SSEClient.unsubscribeFromSSE();
   }
 }
