@@ -14,6 +14,7 @@ interface IncidentRepository extends JpaRepository<Incident, Long> {
     @Query(value = """
         SELECT * FROM incidents
         WHERE ST_DWithin(location, :userLocation, :radiusInMeters)
+        ORDER BY incidents.updated_at DESC
         """, nativeQuery = true)
     List<Incident> findWithinRadius(
         @Param("userLocation") Point userLocation,
@@ -32,6 +33,7 @@ interface IncidentRepository extends JpaRepository<Incident, Long> {
                 4326
             )
         )
+        ORDER BY incidents.updated_at DESC
         """, nativeQuery = true)
     List<Incident> findWithinBounds(
         @Param("topLeftPoint") Coordinates topLeftPoint,
