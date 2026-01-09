@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color emmaBlue = Color(0xFF0D47A1);
+  static const Color emmaOrange = Color(0xFFD23F01);
 
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       fontFamily: 'Montserrat',
-      colorSchemeSeed: emmaBlue,
+      colorSchemeSeed: emmaOrange,
       scaffoldBackgroundColor: Colors.white,
       
       inputDecorationTheme: InputDecorationTheme(
@@ -27,7 +27,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(double.infinity, 56),
-          backgroundColor: emmaBlue,
+          backgroundColor: emmaOrange,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),

@@ -25,7 +25,7 @@ class _SetupProfilePageState extends State<SetupProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = AppTheme.emmaBlue; // Using your professional blue
+    const primaryColor = AppTheme.emmaOrange;
 
     return Scaffold(
       backgroundColor: Colors.white,
