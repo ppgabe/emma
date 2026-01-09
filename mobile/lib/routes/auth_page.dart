@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -92,7 +94,7 @@ class _AuthPageState extends State<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = AppTheme.emmaBlue;
+    const primaryColor = AppTheme.emmaOrange;
 
     return Scaffold(
       body: SafeArea(
@@ -105,18 +107,8 @@ class _AuthPageState extends State<AuthPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Center(
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Icon(Icons.shield, size: 100, color: primaryColor),
-                        Icon(
-                          Icons.monitor_heart,
-                          size: 50,
-                          color: Colors.white,
-                        ),
-                      ],
-                    ),
+                  Center(
+                    child: const Image(image: AssetImage('assets/images/emma_logo.png'), height: 128, width: 128,)
                   ),
                   const SizedBox(height: 16),
                   const Text(
