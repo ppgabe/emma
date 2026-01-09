@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:toastification/toastification.dart';
 import 'package:carousel_slider_plus/carousel_slider_plus.dart';
@@ -26,6 +27,7 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
+  final DateFormat _dateFormatter = DateFormat.yMd().add_jm();
   final LocationService _locationService = LocationService();
 
   final IncidentService _incidentService = IncidentService();
@@ -169,6 +171,10 @@ class _MapScreenState extends State<MapScreen> {
         Marker(
           markerId: MarkerId(incident.id.toString()),
           position: LatLng(coordinates.lat, coordinates.lon),
+          infoWindow: InfoWindow(
+            title: '${incident.title} (${_dateFormatter.format(incident.reportedAt)})',
+            snippet: incident.description
+          )
         ),
       );
     }
